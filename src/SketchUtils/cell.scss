@@ -1,0 +1,30 @@
+.cell {
+  position: relative;
+  text-align: left;
+
+  .sketch {
+  }
+
+  .play-button {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .time-slider {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+
+  .info {
+    text-align: left;
+    position: absolute;
+    left: 0;
+    .sliders {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+  }
+
+}

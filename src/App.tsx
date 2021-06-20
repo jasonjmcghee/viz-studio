@@ -1,23 +1,23 @@
 import React from 'react';
-import logo from './logo.svg';
+import SketchCell from "./SketchUtils/SketchCell";
 import './App.css';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        {/*<input */}
+        {/*  type="range" min="0" max="100" value="100" step="1" */}
+        {/*  onInput={(e) => e.target.}*/}
+        {/*/>*/}
+        <SketchCell
+          key={0}
+          rate={2}
+        />
+        <SketchCell
+          key={1}
+          rate={1}
+        />
       </header>
     </div>
   );
