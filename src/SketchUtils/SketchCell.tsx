@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
 import p5 from './p5';
-import katex from 'katex';
 import './slider.scss'
 import './play-button.scss'
 import './cell.scss';
@@ -14,16 +13,27 @@ export default function SketchCell(
     playButtonSize = 30,
     autoPlay = true,
     loop = false,
+    code = (p: p5, s: any) => ({
+      setup: () => {},
+      draw: (t) => {},
+    }),
   }
 ) {
   const cellRef = useRef(null);
   const timeSliderRef = useRef(null);
 
   const sketchState = useRef({
-    maxT: duration,
+    duration,
     t: 0,
     count: 100,
+    width: width,
+    height: height,
   });
+
+  useEffect(() => {
+    s.width = width;
+    s.height = height;
+  }, [width, height])
 
   const s = sketchState.current;
 
@@ -32,7 +42,8 @@ export default function SketchCell(
   const Sketch = (p) => {
 
     let timeSlider;
-    let countSlider;
+    // let countSlider;
+    const c = code(p, s);
 
     p.setup = () => {
       // create canvas
@@ -45,11 +56,13 @@ export default function SketchCell(
       }
 
       // create sliders
-      timeSlider = p.createSlider(0, s.maxT, s.t, 0.01);
+      timeSlider = p.createSlider(0, s.duration, s.t, 0.01);
       timeSlider.style('width', `${width - playButtonSize - 8}px`);
       timeSlider.style('margin-left', `${playButtonSize}px`);
       timeSlider.addClass('e-range');
       timeSlider.parent(timeSliderRef.current);
+
+      c.setup();
 
       // countSlider = p.createSlider(0, 300, s.count, 0.01);
       // countSlider.style('width', '200px');
@@ -63,49 +76,21 @@ export default function SketchCell(
       // const text = p.createSpan("Length");
       // text.parent(countSliderContainer);
       // countSlider.parent(countSliderContainer);
-
-      let tex = p.createSpan();
-      tex.style('font-size', '20px');
-      tex.position(8, 8);
-      katex.render("x = \\sum_{i=1}^{3} sin(\\frac{t}{10i})", tex.elt);
     }
 
     p.draw = () => {
       if (timeSlider.value() !== s.t) {
         s.t = timeSlider.value();
       }
-      // s.count = countSlider.value();
-      p.background(0);
-      // p.translate(width/2, height/2);
-      p.translate(5, -5)
-      plot(s.t, s.count);
+      c.draw(s.t);
+
       if (shouldPlay) {
-        s.t = (s.t + rate) % s.maxT;
+        s.t = (s.t + rate) % s.duration;
         timeSlider.value(s.t);
-        if (!loop && s.t + rate >= s.maxT) {
+        if (!loop && s.t + rate >= s.duration) {
           setPlay(false);
         }
       }
-    }
-
-    const plot = (t, length, color = '#F76C5E') => {
-      p.plot2D(t, length, x1, y1_, color, 3);
-    }
-
-    const x1 = (t) => {
-      // return t;
-      let s = 50;
-      return width / 2 + s * (p.sin(t/10) + p.sin(t/20) + p.sin(t/30));
-    }
-
-    const y1_ = (t) => {
-      return height - y1(t);
-    }
-
-    const y1 = (t) => {
-      // return t;
-      let s = 50;
-      return height / 2 + s * (p.cos(t/20) + p.cos(t/20) + p.cos(t/30));
     }
   }
 

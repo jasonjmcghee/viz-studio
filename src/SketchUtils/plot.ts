@@ -1,6 +1,8 @@
 import p5 from 'p5';
 
-p5.prototype.plot2D = function (start, end, xFn, yFn, color = '#F76C5E', strokeWeight = 3) {
+export const plot2D = p5.prototype.plot2D = function (
+  start, end, xFn, yFn, color = '#F76C5E', strokeWeight = 3
+) {
   this.stroke(color);
   this.strokeWeight(strokeWeight);
   this.noFill();
@@ -13,5 +15,3 @@ p5.prototype.plot2D = function (start, end, xFn, yFn, color = '#F76C5E', strokeW
   this.curveVertex(xFn(start + end - 1), yFn(start + end - 1));
   this.endShape();
 }
-
-export const plot2D = p5.prototype.plot2D;
