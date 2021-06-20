@@ -24,11 +24,13 @@ export default function SketchCell(
   const timeSliderRef = useRef(null);
 
   const sketchState = useRef({
-    duration,
     t: 0,
-    count: 100,
-    width: width,
-    height: height,
+    duration,
+    rate,
+    width,
+    height,
+    loop,
+    autoPlay,
     codeString,
   });
 

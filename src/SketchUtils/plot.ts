@@ -8,10 +8,10 @@ export const plot2D = p5.prototype.plot2D = function (
   this.noFill();
   this.beginShape();
   this.curveVertex(xFn(start), yFn(start));
-  for (let i = 0; i < end - 1; i++) {
-    this.curveVertex(xFn(start + i), yFn(start + i));
+  for (let i = start; i < end - 1; i++) {
+    this.curveVertex(xFn(i), yFn(i));
   }
-  this.curveVertex(xFn(start + end - 1), yFn(start + end - 1));
-  this.curveVertex(xFn(start + end - 1), yFn(start + end - 1));
+  this.curveVertex(xFn(end - 1), yFn(end - 1));
+  this.curveVertex(xFn(end - 1), yFn(end - 1));
   this.endShape();
 }

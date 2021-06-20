@@ -16,8 +16,8 @@ const templateProgram = `(p, s) => {
       plot(t);
     };
 
-    const plot = (t, length= 100, color = '#F76C5E') => {
-      p.plot2D(t, length, x1, y1_, color, 3);
+    const plot = (t, tail = 100, color = '#F76C5E') => {
+      p.plot2D(Math.max(t, t - tail), t, x1, y1_, color, 3);
     }
 
     const x1 = (t) => {
