@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/viz-studio/static/css/main.b0e05e97.chunk.css",
-    "main.js": "/viz-studio/static/js/main.5b0879ad.chunk.js",
-    "main.js.map": "/viz-studio/static/js/main.5b0879ad.chunk.js.map",
+    "main.js": "/viz-studio/static/js/main.700b1ba4.chunk.js",
+    "main.js.map": "/viz-studio/static/js/main.700b1ba4.chunk.js.map",
     "runtime-main.js": "/viz-studio/static/js/runtime-main.492ad662.js",
     "runtime-main.js.map": "/viz-studio/static/js/runtime-main.492ad662.js.map",
     "static/css/2.0b045759.chunk.css": "/viz-studio/static/css/2.0b045759.chunk.css",
@@ -21,6 +21,6 @@
     "static/css/2.0b045759.chunk.css",
     "static/js/2.06bdc239.chunk.js",
     "static/css/main.b0e05e97.chunk.css",
-    "static/js/main.5b0879ad.chunk.js"
+    "static/js/main.700b1ba4.chunk.js"
   ]
 }
