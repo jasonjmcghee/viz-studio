@@ -6,6 +6,9 @@ import "ace-builds/src-noconflict/ext-language_tools"
 import SketchCell from "./SketchUtils/SketchCell";
 
 const templateProgram = `(p, s) => {
+    s.start = 153;
+    s.duration = 531 - 153;
+
     const setup = () => {
       p.textSize(15);
       p.latex("x = \\\\sum_{i=1}^{3} sin(\\\\frac{t}{10i})", 8, 8);
@@ -17,7 +20,7 @@ const templateProgram = `(p, s) => {
     };
 
     const plot = (t, tail = 100, color = '#F76C5E') => {
-      p.plot2D(Math.max(t, t - tail), t, x1, y1_, color, 3);
+      p.plot2D(Math.max(0, t - tail), t, x1, y1_, color, 3);
     }
 
     const x1 = (t) => {

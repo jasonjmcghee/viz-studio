@@ -6,6 +6,7 @@ import './cell.scss';
 
 export default function SketchCell(
   {
+    start = 0,
     duration = 500,
     rate = 1,
     width= 710,
@@ -25,6 +26,7 @@ export default function SketchCell(
 
   const sketchState = useRef({
     t: 0,
+    start,
     duration,
     rate,
     width,
@@ -37,16 +39,22 @@ export default function SketchCell(
   const s = sketchState.current;
 
   useEffect(() => {
+    s.start = start;
+    s.duration = duration;
+    s.rate = rate;
     s.width = width;
     s.height = height;
+    s.loop = loop
+    s.autoPlay = autoPlay
     s.codeString = codeString;
-  }, [width, height, s, codeString])
+  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString])
 
   const [shouldPlay, setPlay] = useState(autoPlay);
 
   const Sketch = (p) => {
 
     let timeSlider;
+    let time;
     // let countSlider;
     const c = s.codeString ? (
       (() => {
@@ -58,8 +66,16 @@ export default function SketchCell(
       })()
     ): code(p, s);
 
+    const getFriendlyTime = () => p.floor(s.start + s.t);
+    const getFriendlyDuration = () => p.floor(s.start + s.duration);
+    const formatTimeAndDuration = () => `${getFriendlyTime()} / ${getFriendlyDuration()}`;
+
+    const updateTime = (t) => {
+      timeSlider.value(t);
+      time.html(formatTimeAndDuration());
+    };
+
     p.setup = () => {
-      console.log("Call to setup.");
       // create canvas
       p.createCanvas(width, height);
       p.textSize(15);
@@ -76,7 +92,11 @@ export default function SketchCell(
       timeSlider.addClass('e-range');
       timeSlider.parent(timeSliderRef.current);
 
-      if (c) {
+      time = p.createSpan(formatTimeAndDuration());
+      time.addClass('seek-time');
+      time.parent(timeSliderRef.current);
+
+      if (c && c.setup) {
         c.setup();
       }
 
@@ -97,19 +117,20 @@ export default function SketchCell(
     p.draw = () => {
       if (timeSlider.value() !== s.t) {
         s.t = timeSlider.value();
+        updateTime(s.t);
       }
 
-      let nextT = shouldPlay ? (s.t + rate) % s.duration : s.t;
-      if (c) {
-        c.draw(s.t, nextT);
+      let nextT = shouldPlay ? (s.t + s.rate) % s.duration : s.t;
+      if (c && c.draw) {
+        c.draw(s.start + s.t, s.start + nextT);
       }
 
       if (shouldPlay) {
         s.t = nextT;
-        timeSlider.value(s.t);
-        if (!loop && s.t + rate >= s.duration) {
+        updateTime(s.t);
+        if (!loop && s.t + s.rate >= s.duration) {
           setPlay(false);
-          timeSlider.value(0);
+          updateTime(0);
         }
       }
     }
@@ -128,7 +149,7 @@ export default function SketchCell(
   return (
     <div ref={cellRef} className={"cell"}>
       <div className={"sketch"} ref={myRef}/>
-      <div ref={timeSliderRef} className={"time-slider"} />
+      <div ref={timeSliderRef} className={"time-slider"}/>
       <button
         className={`play-button${!shouldPlay ? '' : ' paused'}`}
         onClick={() => {setPlay(!shouldPlay); }}
