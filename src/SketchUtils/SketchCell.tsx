@@ -17,6 +17,7 @@ export default function SketchCell(
       setup: () => {},
       draw: (t) => {},
     }),
+    codeString = "",
   }
 ) {
   const cellRef = useRef(null);
@@ -28,14 +29,16 @@ export default function SketchCell(
     count: 100,
     width: width,
     height: height,
+    codeString,
   });
+
+  const s = sketchState.current;
 
   useEffect(() => {
     s.width = width;
     s.height = height;
-  }, [width, height])
-
-  const s = sketchState.current;
+    s.codeString = codeString;
+  }, [width, height, s, codeString])
 
   const [shouldPlay, setPlay] = useState(autoPlay);
 
@@ -43,9 +46,18 @@ export default function SketchCell(
 
     let timeSlider;
     // let countSlider;
-    const c = code(p, s);
+    const c = s.codeString ? (
+      (() => {
+        try {
+          return eval(s.codeString)(p, s)
+        } catch (e) {
+          console.error("Failed to compile.")
+        }
+      })()
+    ): code(p, s);
 
     p.setup = () => {
+      console.log("Call to setup.");
       // create canvas
       p.createCanvas(width, height);
       p.textSize(15);
@@ -62,7 +74,9 @@ export default function SketchCell(
       timeSlider.addClass('e-range');
       timeSlider.parent(timeSliderRef.current);
 
-      c.setup();
+      if (c) {
+        c.setup();
+      }
 
       // countSlider = p.createSlider(0, 300, s.count, 0.01);
       // countSlider.style('width', '200px');
@@ -82,13 +96,18 @@ export default function SketchCell(
       if (timeSlider.value() !== s.t) {
         s.t = timeSlider.value();
       }
-      c.draw(s.t);
+
+      let nextT = shouldPlay ? (s.t + rate) % s.duration : s.t;
+      if (c) {
+        c.draw(s.t, nextT);
+      }
 
       if (shouldPlay) {
-        s.t = (s.t + rate) % s.duration;
+        s.t = nextT;
         timeSlider.value(s.t);
         if (!loop && s.t + rate >= s.duration) {
           setPlay(false);
+          timeSlider.value(0);
         }
       }
     }
