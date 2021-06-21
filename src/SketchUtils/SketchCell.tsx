@@ -3,6 +3,7 @@ import p5 from './p5';
 import './slider.scss'
 import './play-button.scss'
 import './cell.scss';
+declare var MediaRecorder: any;
 
 export default function SketchCell(
   {
@@ -21,8 +22,15 @@ export default function SketchCell(
     codeString = "",
   }
 ) {
+  const showRecordButton = false;
+  // const recorderRef = useRef(new Recorder());
+  const canvasRef = useRef(null);
   const cellRef = useRef(null);
   const timeSliderRef = useRef(null);
+  const saveVideoRef = useRef(null);
+  const recorderRef = useRef(null);
+  const videoChunks = useRef([]);
+  const streamRef = useRef(null);
 
   const sketchState = useRef({
     t: 0,
@@ -34,6 +42,7 @@ export default function SketchCell(
     loop,
     autoPlay,
     codeString,
+    prevCodeString: codeString,
   });
 
   const s = sketchState.current;
@@ -44,24 +53,90 @@ export default function SketchCell(
     s.rate = rate;
     s.width = width;
     s.height = height;
-    s.loop = loop
-    s.autoPlay = autoPlay
+    s.loop = loop;
+    s.autoPlay = autoPlay;
     s.codeString = codeString;
   }, [start, duration, rate, width, height, loop, autoPlay, s, codeString])
 
   const [shouldPlay, setPlay] = useState(autoPlay);
+  const [shouldRecord, setRecord] = useState(false);
+  const [isRecording, setRecording] = useState(false);
+
+  const record = () => {
+    setRecord(true);
+    videoChunks.current = [];
+  };
+
+  const stopRecording = () => {
+    setRecord(false);
+  };
+
+  useEffect(() => {
+    if (streamRef.current === null) {
+      return;
+    }
+    if (recorderRef.current == null) {
+      // @ts-ignore
+      recorderRef.current = new MediaRecorder(streamRef.current, {
+        audioBitsPerSecond: 0,
+        videoBitsPerSecond: 2500000,
+        mimeType: 'video/webm',
+      });
+      // @ts-ignore
+      recorderRef.current.ondataavailable = e => {
+        if (e.data.size) {
+          console.log("Got chunk", e.data);
+          // @ts-ignore
+          videoChunks.current.push(e.data);
+        }
+      };
+      // @ts-ignore
+      recorderRef.current.onstop = exportVideo;
+    }
+  });
+
+  function exportVideo(e) {
+    var blob = new Blob(videoChunks.current);
+    var vid = document.createElement('video');
+    vid.id = 'recorded'
+    vid.controls = true;
+    var source = document.createElement('source');
+    source.src = URL.createObjectURL(blob);
+    source.type = blob.type;
+    vid.appendChild(source);
+    document.body.appendChild(vid);
+    vid.play();
+  }
 
   const Sketch = (p) => {
 
     let timeSlider;
     let time;
     // let countSlider;
+    const execCodeString = (code) => eval(`
+      const __vars = {};
+      for (let m in p) {
+        __vars[m] = p[m];
+      }
+      ${code}
+      const entries = [];
+      for (let m in p) {
+        if (typeof p[m] === 'function' && !__vars[m]) {
+          entries.push([m, p[m]]);
+        }
+      }
+      Object.fromEntries(entries);`
+    );
+
     const c = s.codeString ? (
       (() => {
         try {
-          return eval(s.codeString)(p, s)
+          const result = execCodeString(s.codeString);
+          s.prevCodeString = s.codeString;
+          return result;
         } catch (e) {
-          console.error("Failed to compile.")
+          console.error("Failed to compile.", e);
+          return execCodeString(s.prevCodeString);
         }
       })()
     ): code(p, s);
@@ -75,9 +150,20 @@ export default function SketchCell(
       time.html(formatTimeAndDuration());
     };
 
+    const stop = () => {
+      setPlay(false);
+      if (isRecording) {
+        setRecording(false);
+        // @ts-ignore
+        recorderRef.current.stop();
+      }
+      updateTime(0);
+    };
+
     p.setup = () => {
       // create canvas
-      p.createCanvas(width, height);
+      const canvas = p.createCanvas(width, height);
+      streamRef.current = canvas.elt.captureStream(60)
       p.textSize(15);
       p.noStroke();
 
@@ -115,6 +201,18 @@ export default function SketchCell(
     }
 
     p.draw = () => {
+      if (shouldRecord && !isRecording) {
+        updateTime(0);
+        setRecording(true);
+        setPlay(true);
+        // @ts-ignore
+        recorderRef.current.start(1000);
+      } else if (!shouldRecord && isRecording) {
+        // @ts-ignore
+        recorderRef.current.stop();
+        setRecording(false);
+      }
+
       if (timeSlider.value() !== s.t) {
         s.t = timeSlider.value();
         updateTime(s.t);
@@ -129,8 +227,7 @@ export default function SketchCell(
         s.t = nextT;
         updateTime(s.t);
         if (!loop && s.t + s.rate >= s.duration) {
-          setPlay(false);
-          updateTime(0);
+          stop();
         }
       }
     }
@@ -148,6 +245,18 @@ export default function SketchCell(
 
   return (
     <div ref={cellRef} className={"cell"}>
+      {showRecordButton &&
+        <button
+          ref={saveVideoRef}
+          onClick={() => {
+            if (isRecording) {
+              stopRecording();
+            } else {
+              record();
+            }
+          }}
+        >{isRecording ? 'Recording...' : 'Record'}</button>
+      }
       <div className={"sketch"} ref={myRef}/>
       <div ref={timeSliderRef} className={"time-slider"}/>
       <button

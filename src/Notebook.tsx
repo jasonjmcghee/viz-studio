@@ -4,42 +4,40 @@ import "ace-builds/src-noconflict/mode-jsx";
 import "ace-builds/src-noconflict/theme-monokai";
 import "ace-builds/src-noconflict/ext-language_tools"
 import SketchCell from "./SketchUtils/SketchCell";
+import {debounce} from "react-ace/lib/editorOptions";
 
-const templateProgram = `(p, s) => {
-    s.start = 153;
-    s.duration = 531 - 153;
+const templateProgram = `s.start = 153;
+s.duration = 531 - 153;
 
-    const setup = () => {
-      p.textSize(15);
-      p.latex("x = \\\\sum_{i=1}^{3} sin(\\\\frac{t}{10i})", 8, 8);
-    };
+p.setup = () => {
+  p.textSize(15);
+  p.latex("x = \\\\sum_{i=1}^{3} sin(\\\\frac{t}{10i})", 8, 8);
+};
 
-    const draw = (t, nextT) => {
-      p.background(0);
-      plot(t);
-    };
+p.draw = (t, nextT) => {
+  p.background(0);
+  plot(t);
+};
 
-    const plot = (t, tail = 100, color = '#F76C5E') => {
-      p.plot2D(Math.max(0, t - tail), t, x1, y1_, color, 3);
-    }
+const plot = (t, tail = 100, color = '#F76C5E') => {
+  p.plot2D(Math.max(0, t - tail), t, x1, y1_, color, 3);
+};
 
-    const x1 = (t) => {
-      // return t;
-      let scale = s.width / 10;
-      return s.width / 2 + scale * (p.sin(t/10) + p.sin(t/20) + p.sin(t/30));
-    }
+const x1 = (t) => {
+  // return t;
+  let scale = s.width / 10;
+  return s.width / 2 + scale * (p.sin(t/10) + p.sin(t/20) + p.sin(t/30));
+};
 
-    const y1_ = (t) => {
-      return s.height - y1(t);
-    }
+const y1_ = (t) => {
+  return s.height - y1(t);
+};
 
-    const y1 = (t) => {
-      // return t;
-      let scale = s.width / 10;
-      return s.height / 2 + scale * (p.cos(t / 10) + p.cos(t / 20) + p.cos(t / 30));
-    }
-    return {setup, draw};
-  };
+const y1 = (t) => {
+  // return t;
+  let scale = s.width / 10;
+  return s.height / 2 + scale * (p.cos(t / 10) + p.cos(t / 20) + p.cos(t / 30));
+};
 `;
 
 export default function EditorCell({
@@ -62,13 +60,14 @@ export default function EditorCell({
         rate={1}
         loop={true}
       />
-      <AceEditor
+      {// @ts-ignore
+      }<AceEditor
         style={{width: `${width}px`}}
         // height={`${height}px`}
         mode="jsx"
         theme="monokai"
         name="UNIQUE_ID_OF_DIV"
-        onChange={updateOnChange ? onChange : undefined}
+        onChange={updateOnChange ? debounce(onChange, 300) : undefined}
         onBlur={!updateOnChange ? onBlur : undefined}
         defaultValue={templateProgram}
         editorProps={{ $blockScrolling: true }}

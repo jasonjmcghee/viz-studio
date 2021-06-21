@@ -61,7 +61,7 @@ function App() {
         {/*  code={code}*/}
         {/*  rate={2}*/}
         {/*/>*/}
-        {width && <EditorCell width={width} />}
+        {width && <EditorCell width={width} updateOnChange={true} />}
       </header>
     </div>
   );
