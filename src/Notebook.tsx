@@ -57,9 +57,9 @@ class Particle {
   constructor(){
     this.x = this.originX = p.random(0,width);
     this.y = this.originY = p.random(0,height);
-    this.r = p.random(1,8);
-    this.xSpeed = p.random(-2,2);
-    this.ySpeed = p.random(-1,1.5);
+    this.r = p.random(width / 1000, width / 200);
+    this.xSpeed = p.random(-width / 500, width / 500);
+    this.ySpeed = p.random(-height / 500, height / 500);
   }
 
 // creation of a particle.
@@ -90,7 +90,7 @@ class Particle {
   joinParticles(particles) {
     particles.forEach(element =>{
       let dis = p.dist(this.x,this.y,element.x,element.y);
-      if(dis<85) {
+      if(dis < width / 10) {
         p.stroke('rgba(255,255,255,0.04)');
         p.line(this.x,this.y,element.x,element.y);
       }

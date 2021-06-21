@@ -14,4 +14,5 @@ export const plot2D = p5.prototype.plot2D = function (
   this.curveVertex(xFn(end - 1), yFn(end - 1));
   this.curveVertex(xFn(end - 1), yFn(end - 1));
   this.endShape();
+  this.strokeWeight(1);
 }
