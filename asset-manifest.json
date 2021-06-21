@@ -6,20 +6,20 @@
     "runtime-main.js": "/static/js/runtime-main.6d7d8d00.js",
     "runtime-main.js.map": "/static/js/runtime-main.6d7d8d00.js.map",
     "static/css/2.96779a55.chunk.css": "/static/css/2.96779a55.chunk.css",
-    "static/js/2.8a463b90.chunk.js": "/static/js/2.8a463b90.chunk.js",
-    "static/js/2.8a463b90.chunk.js.map": "/static/js/2.8a463b90.chunk.js.map",
+    "static/js/2.cb370962.chunk.js": "/static/js/2.cb370962.chunk.js",
+    "static/js/2.cb370962.chunk.js.map": "/static/js/2.cb370962.chunk.js.map",
     "static/js/3.fe14d035.chunk.js": "/static/js/3.fe14d035.chunk.js",
     "static/js/3.fe14d035.chunk.js.map": "/static/js/3.fe14d035.chunk.js.map",
     "index.html": "/index.html",
     "static/css/2.96779a55.chunk.css.map": "/static/css/2.96779a55.chunk.css.map",
     "static/css/main.fa9bb6cd.chunk.css.map": "/static/css/main.fa9bb6cd.chunk.css.map",
-    "static/js/2.8a463b90.chunk.js.LICENSE.txt": "/static/js/2.8a463b90.chunk.js.LICENSE.txt",
+    "static/js/2.cb370962.chunk.js.LICENSE.txt": "/static/js/2.cb370962.chunk.js.LICENSE.txt",
     "static/media/index.scss": "/static/media/KaTeX_Typewriter-Regular.b6a56b14.woff"
   },
   "entrypoints": [
     "static/js/runtime-main.6d7d8d00.js",
     "static/css/2.96779a55.chunk.css",
-    "static/js/2.8a463b90.chunk.js",
+    "static/js/2.cb370962.chunk.js",
     "static/css/main.fa9bb6cd.chunk.css",
     "static/js/main.66d6e0d5.chunk.js"
   ]
