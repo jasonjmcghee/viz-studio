@@ -8,7 +8,8 @@ declare var MediaRecorder: any;
 export default function SketchCell(
   {
     start = 0,
-    duration = 500,
+    duration = 30,
+    frameRate = 60,
     rate = 1,
     width= 710,
     height = 400,
@@ -43,6 +44,7 @@ export default function SketchCell(
     autoPlay,
     codeString,
     prevCodeString: codeString,
+    frameRate,
   });
 
   const s = sketchState.current;
@@ -56,7 +58,8 @@ export default function SketchCell(
     s.loop = loop;
     s.autoPlay = autoPlay;
     s.codeString = codeString;
-  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString])
+    s.frameRate = frameRate;
+  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate])
 
   const [shouldPlay, setPlay] = useState(autoPlay);
   const [shouldRecord, setRecord] = useState(false);
@@ -163,7 +166,9 @@ export default function SketchCell(
     p.setup = () => {
       // create canvas
       const canvas = p.createCanvas(width, height);
-      streamRef.current = canvas.elt.captureStream(60)
+      // streamRef.current = canvas.elt.captureStream(60)
+      p.randomSeed(1337);
+      p.frameRate(s.frameRate);
       p.textSize(15);
       p.noStroke();
 
@@ -183,7 +188,12 @@ export default function SketchCell(
       time.parent(timeSliderRef.current);
 
       if (c && c.setup) {
-        c.setup();
+
+        try {
+          c.setup();
+        } catch (e) {
+          console.error("Failed to execute setup.", e)
+        }
       }
 
       // countSlider = p.createSlider(0, 300, s.count, 0.01);
@@ -220,7 +230,12 @@ export default function SketchCell(
 
       let nextT = shouldPlay ? (s.t + s.rate) % s.duration : s.t;
       if (c && c.draw) {
-        c.draw(s.start + s.t, s.start + nextT);
+        try {
+          c.draw(s.start + s.t, s.start + nextT);
+        } catch (e) {
+          p.noLoop();
+          console.error("Failed to execute draw.", e)
+        }
       }
 
       if (shouldPlay) {
