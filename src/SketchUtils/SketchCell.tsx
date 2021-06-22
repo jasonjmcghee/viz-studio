@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import p5 from './p5';
 import './slider.scss'
 import './play-button.scss'
@@ -25,6 +25,8 @@ export default function SketchCell(
     freshState = false,
   }
 ) {
+  const p5Ref = useRef<p5>(null);
+
   const showRecordButton = false;
   // const recorderRef = useRef(new Recorder());
   const canvasRef = useRef(null);
@@ -48,6 +50,7 @@ export default function SketchCell(
     prevCodeString: codeString,
     frameRate,
     webgl,
+    __state: {},
   });
 
   const s = sketchState.current;
@@ -63,7 +66,13 @@ export default function SketchCell(
     s.codeString = codeString;
     s.frameRate = frameRate;
     s.webgl = webgl;
-  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate, webgl, freshState])
+
+    if (p5Ref.current) {
+      s.__state = p5Ref.current?.__state ?? {};
+    }
+  }, [
+    start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate, webgl, freshState, p5Ref.current?.__state
+  ])
 
   const [shouldPlay, setPlay] = useState(autoPlay);
   const [shouldRecord, setRecord] = useState(false);
@@ -116,6 +125,7 @@ export default function SketchCell(
   }
 
   const Sketch = (p) => {
+    p.__state = s.__state;
 
     let timeSlider;
     let time;
@@ -255,7 +265,6 @@ export default function SketchCell(
   };
 
   const myRef = useRef<HTMLDivElement>(null);
-  const p5Ref = useRef<p5>(null);
   const rerender = () => {
     if (myRef.current == null) return;
     if (p5Ref.current != null) {
