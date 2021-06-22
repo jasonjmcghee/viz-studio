@@ -8,10 +8,6 @@ let r1 = size / 6;
 let r2 = r1;
 let m1 = r1 / 7;
 let m2 = m1;
-let a1 = 0;
-let a2 = 0;
-let a1_v = 0;
-let a2_v = 0;
 let g = size / 500;
 
 let px2 = -1;
@@ -23,14 +19,16 @@ let frames = [];
 
 s.duration = 1000;
 
-p.setup = () => {
-  a1 = p.PI / 2;
-  a2 = p.PI / 2;
+const calculateFrames = () => {
+  let a1 = p.PI / 2;
+  let a2 = p.PI / 2;
+  let a1_v = 0;
+  let a2_v = 0;
   cx = p.width / 2;
   cy = p.height / 4;
   
   frames = [];
-  for (var i = 0; i < s.duration; i++) {
+  for (var i = 0; i <= s.duration; i++) {
     let num1 = -g * (2 * m1 + m2) * p.sin(a1);
     let num2 = -m2 * g * p.sin(a1 - 2 * a2);
     let num3 = -2 * p.sin(a1 - a2) * m2;
@@ -61,9 +59,32 @@ p.setup = () => {
     px2 = x2;
     py2 = y2;
   }
+};
+
+let sliderR1, sliderR2, sliderM1, sliderM2;
+
+p.setup = () => {
+  p.text("Radius 1", 10, 10)
+  p.text("Radius 2", 10, 30)
+  p.text("Mass 1", 10, 50)
+  p.text("Mass 2", 10, 70)
+  sliderR1 = p.cachedSlider('sliderR1', 10, 100, r1).position(90, 10);
+  sliderR2 = p.cachedSlider('sliderR2', 10, 100, r2).position(90, 30);
+  sliderM1 = p.cachedSlider('sliderM1', 2, 100, m1).position(90, 50);
+  sliderM2 = p.cachedSlider('sliderM2', 2, 100, m2).position(90, 70);
+  
+  calculateFrames();
 }
 
 p.draw = (t) => {
+  if (r1 != sliderR1.value() || r2 != sliderR2.value() || m1 != sliderM1.value() || m2 != sliderM2.value()) {
+    r1 = sliderR1.value();
+    r2 = sliderR2.value();
+    m1 = sliderM1.value();
+    m2 = sliderM2.value();
+    calculateFrames();
+  }
+  
   const fadingGradient = (_, value, minVal = 0.2, length = s.duration / 5) => {
     let fraction = Math.max(minVal, 1 - ((t-value) / length));
     p.stroke(
@@ -74,7 +95,7 @@ p.draw = (t) => {
         )
     );
     p.strokeWeight(fraction * 3);
-};
+  };
   
   const {x1, x2, y1, y2, px2, py2} = frames[p.floor(t)];
   
