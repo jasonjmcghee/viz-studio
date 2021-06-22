@@ -22,6 +22,7 @@ export default function SketchCell(
       draw: (t) => {},
     }),
     codeString = "",
+    freshState = false,
   }
 ) {
   const showRecordButton = false;
@@ -61,7 +62,8 @@ export default function SketchCell(
     s.autoPlay = autoPlay;
     s.codeString = codeString;
     s.frameRate = frameRate;
-  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate, webgl])
+    s.webgl = webgl;
+  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate, webgl, freshState])
 
   const [shouldPlay, setPlay] = useState(autoPlay);
   const [shouldRecord, setRecord] = useState(false);

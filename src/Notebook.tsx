@@ -1,4 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
+import { useLocation, useHistory } from 'react-router-dom';
+
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-jsx";
 import "ace-builds/src-noconflict/theme-monokai";
@@ -10,6 +12,7 @@ import './Notebook.scss';
 import {plotAndParticles} from "./examples/plotAndParticles";
 import {doublePendulum} from "./examples/doublePendulum";
 import {mandelbrot} from "./examples/mandelbrot";
+import {newSketch} from "./examples/newSketch";
 
 const templateProgram = `// Player Settings
 s.start = 153;
@@ -174,8 +177,13 @@ export default function EditorCell({
   width = 700,
   updateOnChange = false,
 }) {
+  const [freshState, setFreshState] = useState(false);
   const [resizeFraction, setResizeFraction] = useState(4/7);
   const [codeString, setCodeString] = useState(``);
+  const autoUpdate = useRef(false);
+  const location = useLocation();
+  const history = useHistory();
+
   const defaultHeight = useRef(Math.floor(resizeFraction * width));
   // useEffect(() => {
   //   defaultHeight.current = parseInt(
@@ -184,10 +192,14 @@ export default function EditorCell({
   // }, []);
 
   const [sketchHeight, setSketchHeight] = useState(defaultHeight.current);
-  useEffect(() => {
-    const prog = window.location.hash.substr(1);
+
+  function updateProg(prog) {
     if (!prog.length) {
       setCodeString(plotAndParticles);
+      return;
+    }
+    if (prog.toLowerCase() === "new") {
+      setCodeString(newSketch);
       return;
     }
     if (prog.toLowerCase() === "pendulum") {
@@ -202,19 +214,34 @@ export default function EditorCell({
       const code = from_b64(prog);
       setCodeString(code);
     } catch (e) {
-      debugger;
       console.error("Unable to parse program, falling back to template.");
-      window.location.hash = "";
+      location.hash = "";
       setCodeString(plotAndParticles);
     }
+  }
+
+  useEffect(() => {
+    updateProg(location.pathname.substr(1));
+    history.listen((loc) => {
+      if (autoUpdate.current) return;
+      setFreshState(true);
+      updateProg(loc.pathname.substr(1));
+      setFreshState(false);
+    });
   }, []);
 
   const onChange = (newValue) => {
     if (hashCode(codeString) !== hashCode(newValue)) {
       setCodeString(newValue);
-      window.history.pushState({}, 'Viz Code Update', `#${to_b64(newValue)}`);
+      // const title = `${document.title} - Updated`;
+      autoUpdate.current = true;
+      const prog = to_b64(newValue);
+      history.push(prog);
+      updateProg(prog)
+      autoUpdate.current = false;
     }
   };
+
   const onBlur = (e, editor) => onChange(editor.getValue());
   const editorHeight = height - sketchHeight;
 
@@ -242,9 +269,10 @@ export default function EditorCell({
         codeString={codeString}
         rate={1}
         loop={true}
+        freshState
       />
       {// @ts-ignore
-      }{editorHeight > 0 && <AceEditor
+      }<AceEditor
         style={{width: `${width}px`}}
         height={`${height - sketchHeight}px`}
         mode="jsx"
@@ -262,7 +290,7 @@ export default function EditorCell({
           tabSize: 2,
           printMargin: false,
         }}
-      />}
+      />
       </SplitPane>}
     </div>
   );
