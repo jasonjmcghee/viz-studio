@@ -174,14 +174,14 @@ export default function EditorCell({
   width = 700,
   updateOnChange = false,
 }) {
-  const [readyToRender, setReadyToRender] = useState(false);
+  const [resizeFraction, setResizeFraction] = useState(4/7);
   const [codeString, setCodeString] = useState(``);
-  const defaultHeight = useRef(Math.floor((4/7) * width));
-  useEffect(() => {
-    defaultHeight.current = parseInt(
-      localStorage.getItem('splitPos') ?? defaultHeight.current.toString(), 10
-    );
-  }, []);
+  const defaultHeight = useRef(Math.floor(resizeFraction * width));
+  // useEffect(() => {
+  //   defaultHeight.current = parseInt(
+  //     localStorage.getItem('splitPos') ?? defaultHeight.current.toString(), 10
+  //   );
+  // }, []);
 
   const [sketchHeight, setSketchHeight] = useState(defaultHeight.current);
   useEffect(() => {
@@ -199,9 +199,10 @@ export default function EditorCell({
       return;
     }
     try {
-      const code = from_b64(prog.substr(1));
+      const code = from_b64(prog);
       setCodeString(code);
     } catch (e) {
+      debugger;
       console.error("Unable to parse program, falling back to template.");
       window.location.hash = "";
       setCodeString(plotAndParticles);
@@ -218,9 +219,14 @@ export default function EditorCell({
   const editorHeight = height - sketchHeight;
 
   const updateSize = (size) => {
-    localStorage.setItem('splitPos', size.toString());
-    setSketchHeight(size);
+    // localStorage.setItem('splitPos', size.toString());
+    setResizeFraction(size / height);
+    setSketchHeight(resizeFraction * height);
   };
+
+  useEffect(() => {
+    setSketchHeight(resizeFraction * height);
+  }, [height, resizeFraction])
 
   return (
     <div>
