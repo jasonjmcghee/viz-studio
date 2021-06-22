@@ -68,8 +68,8 @@ p.setup = () => {
   p.text("Radius 2", 10, 30)
   p.text("Mass 1", 10, 50)
   p.text("Mass 2", 10, 70)
-  sliderR1 = p.cachedSlider('sliderR1', 10, 100, r1).position(90, 10);
-  sliderR2 = p.cachedSlider('sliderR2', 10, 100, r2).position(90, 30);
+  sliderR1 = p.cachedSlider('sliderR1', 10, 200, r1).position(90, 10);
+  sliderR2 = p.cachedSlider('sliderR2', 10, 200, r2).position(90, 30);
   sliderM1 = p.cachedSlider('sliderM1', 2, 100, m1).position(90, 50);
   sliderM2 = p.cachedSlider('sliderM2', 2, 100, m2).position(90, 70);
   
