@@ -176,9 +176,9 @@ export default function SketchCell(
       p.textSize(15);
       p.noStroke();
 
-      if (!shouldPlay && (timeSlider && timeSlider.value() === s.t)) {
-        p.noLoop();
-      }
+      // if (!shouldPlay && (timeSlider && timeSlider.value() === s.t)) {
+      //   p.noLoop();
+      // }
 
       // create sliders
       timeSlider = p.createSlider(0, s.duration, s.t, 0.01);
