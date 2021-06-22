@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import p5 from './p5';
 import './slider.scss'
 import './play-button.scss'
@@ -16,6 +16,7 @@ export default function SketchCell(
     playButtonSize = 30,
     autoPlay = true,
     loop = false,
+    webgl = false,
     code = (p: p5, s: any) => ({
       setup: () => {},
       draw: (t) => {},
@@ -45,6 +46,7 @@ export default function SketchCell(
     codeString,
     prevCodeString: codeString,
     frameRate,
+    webgl,
   });
 
   const s = sketchState.current;
@@ -59,7 +61,7 @@ export default function SketchCell(
     s.autoPlay = autoPlay;
     s.codeString = codeString;
     s.frameRate = frameRate;
-  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate])
+  }, [start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate, webgl])
 
   const [shouldPlay, setPlay] = useState(autoPlay);
   const [shouldRecord, setRecord] = useState(false);
@@ -96,7 +98,7 @@ export default function SketchCell(
       // @ts-ignore
       recorderRef.current.onstop = exportVideo;
     }
-  });
+  }, []);
 
   function exportVideo(e) {
     var blob = new Blob(videoChunks.current);
@@ -165,7 +167,9 @@ export default function SketchCell(
 
     p.setup = () => {
       // create canvas
-      const canvas = p.createCanvas(width, height);
+      const canvas = s.webgl
+        ? p.createCanvas(width, height, p.WEBGL)
+        : p.createCanvas(width, height);
       // streamRef.current = canvas.elt.captureStream(60)
       p.randomSeed(1337);
       p.frameRate(s.frameRate);
@@ -246,17 +250,19 @@ export default function SketchCell(
         }
       }
     }
-  }
+  };
 
   const myRef = useRef<HTMLDivElement>(null);
   const p5Ref = useRef<p5>(null);
-  useEffect(() => {
-      if (p5Ref.current != null) {
-        p5Ref.current.remove();
-      }
-      p5Ref.current = new p5(Sketch, myRef.current);
+  const rerender = () => {
+    if (myRef.current == null) return;
+    if (p5Ref.current != null) {
+      p5Ref.current.remove();
     }
-  );
+    p5Ref.current = new p5(Sketch, myRef.current);
+  };
+  // const sketchCallback = useCallback(Sketch, [Sketch]);
+  useEffect(rerender, [Sketch]);
 
   return (
     <div ref={cellRef} className={"cell"}>

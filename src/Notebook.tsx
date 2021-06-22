@@ -1,16 +1,19 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-jsx";
 import "ace-builds/src-noconflict/theme-monokai";
 import "ace-builds/src-noconflict/ext-language_tools"
 import SketchCell from "./SketchUtils/SketchCell";
 import {debounce} from "react-ace/lib/editorOptions";
+import SplitPane from "react-split-pane";
+import './Notebook.scss';
 
 const templateProgram = `// Player Settings
 s.start = 153;
 s.duration = 378 + 5 * 225;
 s.rate = 1;
 s.frameRate = 60;
+s.webgl = false;
 
 // Setup the P5.js Sketch
 let particles = [];
@@ -34,6 +37,10 @@ p.setup = () => {
 };
 
 p.draw = (t, nextT) => {
+  // WebGL origin is the center.
+  if (p.isWebGL) {
+    p.translate(- p.width / 2, - p.height / 2)
+  }
   // Draw the background each frame
   p.background('#0f0f0f');
   // Plot our function based on the current time.
@@ -74,7 +81,7 @@ const plot = (t, tail = 100) => {
 // The LATEX for our additive cos function.
 const x1Latex = "x = \\\\sum_{i=1}^{3} sin(\\\\frac{t}{10i})";
 // The x-location of the tip of the plot at a given time.
-const x1 = (t, scale = s.width / 10) => {
+const x1 = (t, scale = Math.min(s.width, s.height) / 10) => {
   // Additive sine function
   return scale * (p.sin(t/10) + p.sin(t/20) + p.sin(t/30));
 };
@@ -82,7 +89,7 @@ const x1 = (t, scale = s.width / 10) => {
 // The LATEX for our additive sin function.
 const y1Latex = "y = \\\\sum_{i=1}^{3} cos(\\\\frac{t}{10i})";
 // The y-location of the tip of the plot at a given time.
-const y1 = (t, scale = s.width / 10) => {
+const y1 = (t, scale = Math.min(s.width, s.height) / 10) => {
   // Additive cosine function
   const yLoc = scale * (p.cos(t / 10) + p.cos(t / 20) + p.cos(t / 30));
   // Flip the axis so we're drawing from the bottom left.
@@ -132,7 +139,7 @@ class Particle {
   joinParticles(particles) {
     particles.forEach(element =>{
       let dis = p.dist(this.x,this.y,element.x,element.y);
-      if (dis < width / 10) {
+      if (dis < Math.min(width, height) / 10) {
         p.stroke('rgba(255,255,255,0.04)');
         p.line(this.x,this.y,element.x,element.y);
       }
@@ -141,23 +148,72 @@ class Particle {
 }
 `;
 
+function to_b64( str ) {
+  return window.btoa(unescape(encodeURIComponent( str )));
+}
+
+function from_b64( str ) {
+  return decodeURIComponent(escape(window.atob( str )));
+}
+
 export default function EditorCell({
   height,
   width = 700,
   updateOnChange = false,
 }) {
-  const [codeString, setCodeString] = useState(templateProgram);
+  const [readyToRender, setReadyToRender] = useState(false);
+  const [codeString, setCodeString] = useState(``);
+  const defaultHeight = useRef(Math.floor((4/7) * width));
+  useEffect(() => {
+    defaultHeight.current = parseInt(
+      localStorage.getItem('splitPos') ?? defaultHeight.current.toString(), 10
+    );
+  }, []);
+
+  const [sketchHeight, setSketchHeight] = useState(defaultHeight.current);
+  useEffect(() => {
+    if (window.location.pathname.length > 1) {
+      try {
+        const code = from_b64(window.location.pathname.substr(1));
+        setCodeString(code);
+      } catch (e) {
+        console.error("Unable to parse program, falling back to template.");
+        setCodeString(templateProgram);
+      }
+    } else {
+      setCodeString(templateProgram);
+    }
+  }, []);
+
   const onChange = (newValue) => {
-    setCodeString(newValue);
+    if (codeString !== newValue) {
+      setCodeString(newValue);
+      window.history.pushState({}, 'Viz Code Update', `/${to_b64(newValue)}`);
+    }
   };
   const onBlur = (e, editor) => {
-    setCodeString(editor.getValue());
+    const newValue = editor.getValue();
+    if (codeString !== newValue) {
+      setCodeString(newValue);
+      window.history.pushState({}, 'Viz Code Update', `/${to_b64(newValue)}`);
+    }
   };
-  const sketchHeight = (4/7) * width;
   const editorHeight = height - sketchHeight;
+
+  const updateSize = (size) => {
+    localStorage.setItem('splitPos', size.toString());
+    setSketchHeight(size);
+  };
+
   return (
     <div>
-      <SketchCell
+      {codeString && <SplitPane
+        split="horizontal"
+        defaultSize={sketchHeight}
+        onChange={debounce(updateSize, 300)}
+        allowResize={true}
+      >
+        <SketchCell
         width={width}
         height={sketchHeight}
         codeString={codeString}
@@ -166,23 +222,25 @@ export default function EditorCell({
       />
       {// @ts-ignore
       }{editorHeight > 0 && <AceEditor
-      style={{width: `${width}px`}}
-      height={`${height - sketchHeight}px`}
-      mode="jsx"
-      theme="monokai"
-      name="UNIQUE_ID_OF_DIV"
-      onChange={updateOnChange ? debounce(onChange, 300) : undefined}
-      onBlur={!updateOnChange ? onBlur : undefined}
-      defaultValue={templateProgram}
-      editorProps={{$blockScrolling: true}}
-      setOptions={{
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
-        enableSnippets: true,
-        tabSize: 2,
-      }}
-    />
-    }
+        style={{width: `${width}px`}}
+        height={`${height - sketchHeight}px`}
+        mode="jsx"
+        theme="monokai"
+        name="UNIQUE_ID_OF_DIV"
+        onChange={updateOnChange ? debounce(onChange, 300) : undefined}
+        onBlur={!updateOnChange ? onBlur : undefined}
+        value={codeString}
+        defaultValue={codeString}
+        editorProps={{$blockScrolling: true}}
+        setOptions={{
+          enableBasicAutocompletion: true,
+          enableLiveAutocompletion: true,
+          enableSnippets: true,
+          tabSize: 2,
+          printMargin: false,
+        }}
+      />}
+      </SplitPane>}
     </div>
   );
 }
