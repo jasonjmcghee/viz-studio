@@ -38,7 +38,7 @@ p.setup = () => {
 
 p.draw = (t, nextT) => {
   // WebGL origin is the center.
-  if (p.isWebGL) {
+  if (p.isWebGL()) {
     p.translate(- p.width / 2, - p.height / 2)
   }
   // Draw the background each frame
