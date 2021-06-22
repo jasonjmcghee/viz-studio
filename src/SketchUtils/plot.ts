@@ -11,7 +11,7 @@ export const plot2D = p5.prototype.plot2D = function (
   this.curveVertex(x, y);
   this.endShape();
   const partial = 1 / (end - start);
-  for (let i = start; i < end - 1; i++) {
+  for (let i = start; i <= end; i++) {
     this.beginShape();
     preVertex((i - start) * partial, i);
     let lastX = xFn(i - 1), lastY = yFn(i - 1);
@@ -23,9 +23,9 @@ export const plot2D = p5.prototype.plot2D = function (
     this.endShape();
   }
   this.beginShape();
-  preVertex(1, end - 1);
-  x = xFn(end - 1);
-  y = yFn(end - 1);
+  preVertex(1, end);
+  x = xFn(end);
+  y = yFn(end);
   this.curveVertex(x, y);
   this.curveVertex(x, y);
   this.endShape();
