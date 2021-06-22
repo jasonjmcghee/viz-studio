@@ -172,9 +172,9 @@ export default function EditorCell({
 
   const [sketchHeight, setSketchHeight] = useState(defaultHeight.current);
   useEffect(() => {
-    if (window.location.pathname.length > 1) {
+    if (window.location.hash.length > 1) {
       try {
-        const code = from_b64(window.location.pathname.substr(1));
+        const code = from_b64(window.location.hash.substr(1));
         setCodeString(code);
       } catch (e) {
         console.error("Unable to parse program, falling back to template.");
@@ -188,16 +188,10 @@ export default function EditorCell({
   const onChange = (newValue) => {
     if (codeString !== newValue) {
       setCodeString(newValue);
-      window.history.pushState({}, 'Viz Code Update', `/${to_b64(newValue)}`);
+      window.history.pushState({}, 'Viz Code Update', `#${to_b64(newValue)}`);
     }
   };
-  const onBlur = (e, editor) => {
-    const newValue = editor.getValue();
-    if (codeString !== newValue) {
-      setCodeString(newValue);
-      window.history.pushState({}, 'Viz Code Update', `/${to_b64(newValue)}`);
-    }
-  };
+  const onBlur = (e, editor) => onChange(editor.getValue());
   const editorHeight = height - sketchHeight;
 
   const updateSize = (size) => {
