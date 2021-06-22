@@ -50,7 +50,7 @@ function App() {
     return size;
   }
 
-  const [width, _] = useWindowSize();
+  const [width, height] = useWindowSize();
 
   return (
     <div className="App">
@@ -61,7 +61,7 @@ function App() {
         {/*  code={code}*/}
         {/*  rate={2}*/}
         {/*/>*/}
-        {width && <EditorCell width={width} updateOnChange={true} />}
+        {width && <EditorCell height={height} width={width} updateOnChange={true} />}
       </header>
     </div>
   );

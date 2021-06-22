@@ -1,18 +1,33 @@
 import p5 from 'p5';
 
 export const plot2D = p5.prototype.plot2D = function (
-  start, end, xFn, yFn, color = '#F76C5E', strokeWeight = 3
+  start, end, xFn, yFn, {strokeWeight = 3, preVertex = (fraction, value) => {}} = {}
 ) {
-  this.stroke(color);
   this.strokeWeight(strokeWeight);
   this.noFill();
   this.beginShape();
-  this.curveVertex(xFn(start), yFn(start));
+  preVertex(0, start);
+  let x = xFn(start), y = yFn(start);
+  this.curveVertex(x, y);
+  this.endShape();
+  const partial = 1 / (end - start);
   for (let i = start; i < end - 1; i++) {
-    this.curveVertex(xFn(i), yFn(i));
+    this.beginShape();
+    preVertex((i - start) * partial, i);
+    let lastX = xFn(i - 1), lastY = yFn(i - 1);
+    this.curveVertex(lastX, lastY);
+    this.curveVertex(lastX, lastY);
+    let x = xFn(i), y = yFn(i);
+    this.curveVertex(x, y);
+    this.curveVertex(x, y);
+    this.endShape();
   }
-  this.curveVertex(xFn(end - 1), yFn(end - 1));
-  this.curveVertex(xFn(end - 1), yFn(end - 1));
+  this.beginShape();
+  preVertex(1, end - 1);
+  x = xFn(end - 1);
+  y = yFn(end - 1);
+  this.curveVertex(x, y);
+  this.curveVertex(x, y);
   this.endShape();
   this.strokeWeight(1);
 }
