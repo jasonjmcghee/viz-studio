@@ -4,7 +4,7 @@ export const cachedSlider = p5.prototype.cachedSlider = function cachedSlider(na
   if (!this.__state) {
     this.__state = {};
   }
-  const slider = this.createSlider(min, max, this.__state[name]?.value() ?? defaultValue);
+  const slider = this.createSlider(min, max, this.fromCache(name)?.value() ?? defaultValue);
   slider.addClass("e-range");
   slider.style('width', '80px');
   slider.style('margin-top', '8px');

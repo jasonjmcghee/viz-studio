@@ -4,7 +4,7 @@ export const doublePendulum = `// Adapted (look, feel, and parameterized by time
 
 let size = Math.min(height, width);
 
-let r1 = size / 6;
+let r1 = size / 7;
 let r2 = r1;
 let m1 = r1 / 7;
 let m2 = m1;
@@ -62,12 +62,9 @@ const calculateFrames = () => {
 };
 
 let sliderR1, sliderR2, sliderM1, sliderM2;
+let txt;
 
 p.setup = () => {
-  p.text("Radius 1", 10, 10)
-  p.text("Radius 2", 10, 30)
-  p.text("Mass 1", 10, 50)
-  p.text("Mass 2", 10, 70)
   sliderR1 = p.cachedSlider('sliderR1', 10, 200, r1).position(90, 10);
   sliderR2 = p.cachedSlider('sliderR2', 10, 200, r2).position(90, 30);
   sliderM1 = p.cachedSlider('sliderM1', 2, 100, m1).position(90, 50);
@@ -77,6 +74,8 @@ p.setup = () => {
 }
 
 p.draw = (t) => {
+  p.background(0);
+
   if (r1 != sliderR1.value() || r2 != sliderR2.value() || m1 != sliderM1.value() || m2 != sliderM2.value()) {
     r1 = sliderR1.value();
     r2 = sliderR2.value();
@@ -85,6 +84,14 @@ p.draw = (t) => {
     calculateFrames();
   }
   
+  p.fill('white');
+  p.stroke(0);
+  p.translate(0, 26);
+  p.text("Radius 1", 10, 0);
+  p.text("Radius 2", 10, 20);
+  p.text("Mass 1", 10, 40);
+  p.text("Mass 2", 10, 60);
+
   const fadingGradient = (_, value, minVal = 0.2, length = s.duration / 5) => {
     let fraction = Math.max(minVal, 1 - ((t-value) / length));
     p.stroke(
@@ -98,8 +105,6 @@ p.draw = (t) => {
   };
   
   const {x1, x2, y1, y2, px2, py2} = frames[p.floor(t)];
-  
-  p.background(0);
   
   p.translate(cx, cy);
   p.stroke('white');

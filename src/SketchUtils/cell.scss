@@ -1,6 +1,7 @@
 .cell {
   position: relative;
   text-align: left;
+  user-select: none;
 
   .sketch {
     position: relative;

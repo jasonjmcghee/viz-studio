@@ -51,6 +51,7 @@ export default function SketchCell(
     frameRate,
     webgl,
     __state: {},
+    __once: {},
   });
 
   const s = sketchState.current;
@@ -66,9 +67,11 @@ export default function SketchCell(
     s.codeString = codeString;
     s.frameRate = frameRate;
     s.webgl = webgl;
+    s.__once = s.__once || {};
 
     if (p5Ref.current) {
       s.__state = p5Ref.current?.__state ?? {};
+      s.__once = p5Ref.current?.__once ?? {};
     }
   }, [
     start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate, webgl, freshState, p5Ref.current?.__state
@@ -177,7 +180,12 @@ export default function SketchCell(
       updateTime(0);
     };
 
+    p.preload = () => {
+      p.once('katex-font', () => p.loadFont('./resources/KaTeX_Main-Regular.ttf'))
+    };
+
     p.setup = () => {
+      p.textFont(p.fromOnce('katex-font'));
       // create canvas
       const canvas = s.webgl
         ? p.createCanvas(width, height, p.WEBGL)
@@ -227,6 +235,7 @@ export default function SketchCell(
     }
 
     p.draw = () => {
+      p.textSize(18);
       if (shouldRecord && !isRecording) {
         updateTime(0);
         setRecording(true);

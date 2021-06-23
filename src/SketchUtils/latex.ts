@@ -11,7 +11,7 @@ export const latex = p5.prototype.latex = function latex(
   return tex;
 }
 
-export const text = p5.prototype.text = function text(
+export const staticText = p5.prototype.staticText = function staticText(
   string, x = 0, y = 0,
 ) {
   return this.latex(`\\text{${string}}`, x, y);
