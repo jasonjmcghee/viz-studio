@@ -8,6 +8,7 @@ export const latex = p5.prototype.latex = function latex(
   tex.style('font-size', `${this.textSize()}px`);
   tex.position(x, y);
   katex.render(string, tex.elt);
+  return tex;
 }
 
 export const text = p5.prototype.text = function text(
