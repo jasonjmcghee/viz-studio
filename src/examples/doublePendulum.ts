@@ -65,6 +65,10 @@ let sliderR1, sliderR2, sliderM1, sliderM2;
 let txt;
 
 p.setup = () => {
+  p.staticText("Radius 1", 10, 10);
+  p.staticText("Radius 2", 10, 30);
+  p.staticText("Mass 1", 10, 50);
+  p.staticText("Mass 2", 10, 70);
   sliderR1 = p.cachedSlider('sliderR1', 10, 200, r1).position(90, 10);
   sliderR2 = p.cachedSlider('sliderR2', 10, 200, r2).position(90, 30);
   sliderM1 = p.cachedSlider('sliderM1', 2, 100, m1).position(90, 50);
@@ -83,14 +87,6 @@ p.draw = (t) => {
     m2 = sliderM2.value();
     calculateFrames();
   }
-  
-  p.fill('white');
-  p.stroke(0);
-  p.translate(0, 26);
-  p.text("Radius 1", 10, 0);
-  p.text("Radius 2", 10, 20);
-  p.text("Mass 1", 10, 40);
-  p.text("Mass 2", 10, 60);
 
   const fadingGradient = (_, value, minVal = 0.2, length = s.duration / 5) => {
     let fraction = Math.max(minVal, 1 - ((t-value) / length));

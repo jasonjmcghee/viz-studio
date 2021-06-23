@@ -181,11 +181,11 @@ export default function SketchCell(
     };
 
     p.preload = () => {
-      p.once('katex-font', () => p.loadFont('./resources/KaTeX_Main-Regular.ttf'))
+      // p.once('katex-font', () => p.loadFont('./resources/KaTeX_Main-Regular.ttf'))
     };
 
     p.setup = () => {
-      p.textFont(p.fromOnce('katex-font'));
+      // p.textFont(p.fromOnce('katex-font'));
       // create canvas
       const canvas = s.webgl
         ? p.createCanvas(width, height, p.WEBGL)

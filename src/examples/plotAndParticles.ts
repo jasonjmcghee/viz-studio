@@ -8,9 +8,8 @@ s.webgl = false;
 // Setup the P5.js Sketch
 let particles = [];
 p.setup = () => {
-  p.textSize(15);
   // Convenience functions like \`latex\` are available.
-  p.text("The curve is defined by:", 16, 16);
+  p.staticText("The curve is defined by:", 16, 16);
   // Demonstrate our system of equations
   p.latex(
     \`\\\\begin{cases}

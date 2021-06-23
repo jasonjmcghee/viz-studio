@@ -32,8 +32,7 @@ let fs =
 
 let mandel;
 p.setup = () => {
-  p.textSize(15);
-  p.text("Mandelbrot", 8, 8);
+  p.staticText("Mandelbrot", 8, 8);
 
   
   mandel = p.createShader(vs, fs);
