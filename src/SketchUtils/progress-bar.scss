@@ -1,0 +1,34 @@
+.progress-bar {
+  background: #33537669;
+  & .blue {
+    background: #33537669;
+  }
+  & .red {
+    background: #33537669;
+  }
+  height: 10px;
+  position: relative;
+  pointer-events: none;
+}
+
+.progress-fill {
+  position: absolute;
+  height: 10px;
+  left: 0;
+  background: #43AA8B;
+  & .blue {
+    background: #325376;
+  }
+  & .red {
+    background: #325376;
+  }
+}
+
+.progress-handle {
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  opacity: 0;
+  pointer-events: all;
+  cursor: pointer;
+}

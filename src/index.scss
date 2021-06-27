@@ -1,4 +1,9 @@
 @import 'katex/dist/katex.min.css';
+@import './SketchUtils/progress-bar.scss';
+
+* {
+  -webkit-user-drag: none;
+}
 
 body {
   margin: 0;

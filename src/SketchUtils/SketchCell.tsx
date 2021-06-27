@@ -11,8 +11,8 @@ export default function SketchCell(
     duration = 30,
     frameRate = 60,
     rate = 1,
-    width= 710,
-    height = 400,
+    cellWidth= 710,
+    cellHeight = 400,
     playButtonSize = 30,
     autoPlay = true,
     loop = false,
@@ -25,29 +25,32 @@ export default function SketchCell(
     freshState = false,
   }
 ) {
+  window['height'] = cellHeight;
+  window['width'] = cellWidth;
   const p5Ref = useRef<p5>(null);
 
   const showRecordButton = false;
   // const recorderRef = useRef(new Recorder());
-  const canvasRef = useRef(null);
+  const progressRef = useRef(null);
   const cellRef = useRef(null);
   const timeSliderRef = useRef(null);
   const saveVideoRef = useRef(null);
   const recorderRef = useRef(null);
   const videoChunks = useRef([]);
   const streamRef = useRef(null);
+  const playButtonRef = useRef(null);
 
   const sketchState = useRef({
     t: 0,
     start,
     duration,
     rate,
-    width,
-    height,
+    width: cellWidth,
+    height: cellHeight,
     loop,
     autoPlay,
     codeString,
-    prevCodeString: codeString,
+    prevCodeString: '',
     frameRate,
     webgl,
     __state: {},
@@ -60,24 +63,23 @@ export default function SketchCell(
     s.start = start;
     s.duration = duration;
     s.rate = rate;
-    s.width = width;
-    s.height = height;
+    s.width = cellWidth;
+    s.height = cellHeight;
     s.loop = loop;
     s.autoPlay = autoPlay;
     s.codeString = codeString;
     s.frameRate = frameRate;
     s.webgl = webgl;
-    s.__once = s.__once || {};
 
     if (p5Ref.current) {
-      s.__state = p5Ref.current?.__state ?? {};
+      s.__state = p5Ref.current?.__state ?? { '__playing': autoPlay };
       s.__once = p5Ref.current?.__once ?? {};
     }
   }, [
-    start, duration, rate, width, height, loop, autoPlay, s, codeString, frameRate, webgl, freshState, p5Ref.current?.__state
+    start, duration, rate, cellWidth, cellHeight, loop, autoPlay, s,
+    codeString, frameRate, webgl, freshState, p5Ref.current?.__state, p5Ref.current?.__once,
   ])
 
-  const [shouldPlay, setPlay] = useState(autoPlay);
   const [shouldRecord, setRecord] = useState(false);
   const [isRecording, setRecording] = useState(false);
 
@@ -127,26 +129,128 @@ export default function SketchCell(
     vid.play();
   }
 
-  const Sketch = (p) => {
-    p.__state = s.__state;
+  function isPlaying(p) {
+    let playState = p?.fromCache('__playing');
+    if (playState == null) {
+      p.cache('__playing', autoPlay);
+      playState = autoPlay;
+    }
+    return playState;
+  }
 
+  function togglePlay(p, setValue: boolean | null = null) {
+    const shouldPlay = setValue ?? !isPlaying(p);
+    if (playButtonRef.current != null) {
+      // @ts-ignore
+      playButtonRef.current.className = `play-button${!shouldPlay ? '' : ' paused'}`;
+    }
+    p?.cache('__playing', shouldPlay);
+  }
+
+  const Sketch = (p) => {
+    window['p'] = p;
+
+    // p.noDraw = false;
+    // p.noLoop = () => {
+    //   p.noDraw = true;
+    // };
+
+    // const updatePreDraw = ['mouseX', 'mouseY', 'mouseButton', 'mouseIsPressed', 'height', 'width'];
+    const fieldsToUpdate: string[] = [];
+    const updateLookup = new Set();
+
+    p.__once = s.__once;
+    p.__state = s.__state;
     let timeSlider;
+    let updateTime;
+    let progressHandle;
     let time;
+    let sliderWidth;
     // let countSlider;
-    const execCodeString = (code) => eval(`
-      const __vars = {};
+    // @ts-ignore
+    window.__window_funcs = {};
+
+    let p2d = p.P2D;
+    // @ts-ignore
+    const postActionFunctions = {
+      'loadPixels': function () {
+        // @ts-ignore
+        let p: p5 = this;
+        p.loadPixels();
+        updateEvents();
+      }.bind(p),
+      'createCanvas': function (w, h, type = p2d) {
+        // @ts-ignore
+        let p: p5 = this;
+        p.createCanvas(w, h, type);
+        s.webgl = p.isWebGL();
+        const canvas = p._renderer.drawingContext.canvas;
+        s.width = canvas.clientWidth;
+        s.height = canvas.clientHeight;
+        p.width = canvas.clientWidth;
+        p.height = canvas.clientHeight;
+        window['width'] = canvas.clientWidth;
+        window['height'] = canvas.clientHeight;
+      }.bind(p)
+    };
+    // @ts-ignore
+    window.__postActionFunctions = postActionFunctions;
+
+    // @ts-ignore
+    for (let userFn in postActionFunctions) {
+      // @ts-ignore
+      window[userFn] = postActionFunctions[userFn];
+    }
+
+    const execCodeString = (code) => {
+      updateLookup.clear();
       for (let m in p) {
-        __vars[m] = p[m];
-      }
-      ${code}
-      const entries = [];
-      for (let m in p) {
-        if (typeof p[m] === 'function' && !__vars[m]) {
-          entries.push([m, p[m]]);
+        if (!m.startsWith('_') && typeof p[m] !== "function" && code.includes(m)) {
+          fieldsToUpdate.push(m);
+          updateLookup.add(m);
         }
       }
-      Object.fromEntries(entries);`
-    );
+
+      const preExecute: string[] = [];
+      for (let m in p) {
+        if (!m.startsWith('_')) {
+          if (typeof p[m] === "function" && !postActionFunctions[m]) {
+            preExecute.push(`let ${m} = p.${m}.bind(p);`);
+          } else if (typeof p[m] !== "function") {
+            preExecute.push(`var ${m} = p.${m};`);
+          }
+        }
+      }
+
+      const codeToExecute = `
+      ${preExecute.join('\n')}
+      ${code}
+      const entries = [];
+      for (let m in window) {
+        if (typeof window[m] === 'function' && !__window_funcs[m] && !window.__postActionFunctions[m]) {
+          entries.push([m, window[m]]);
+          p[m] = window[m];
+        }
+      }
+      Object.fromEntries(entries);`;
+      if (code) {
+        const match = code.match(/createCanvas\((.*)\)/);
+        if (match && match.length > 1) {
+          const [widthString, heightString] = match[1].split(",");
+          p.width = parseInt(widthString);
+          p.height = parseInt(heightString);
+          s.width = p.width;
+          s.height = p.height;
+        }
+        window['width'] = s.width;
+        window['height'] = s.height;
+      }
+      window['s'] = s;
+      let result = eval.call(window['p'], codeToExecute);
+      // @ts-ignore
+      // window['p'] = undefined;
+      return result;
+    };
 
     const c = s.codeString ? (
       (() => {
@@ -161,58 +265,139 @@ export default function SketchCell(
       })()
     ): code(p, s);
 
+    let shouldUpdateEvents = true;
+
+    const updateEvents = () => {
+      if (!shouldUpdateEvents) return;
+      updateLookup.forEach((m) => {
+        // @ts-ignore
+        if (window[m] !== p[m]) {
+          // @ts-ignore
+          window[m] = p[m];
+        }
+      });
+      // shouldUpdateEvents = false;
+    };
+
+    const userFunctions = [
+      'mousePressed',
+      'mouseDragged',
+      'mouseMoved',
+      'mouseReleased',
+      'mouseClicked',
+      'mouseWheel',
+      'doubleClicked',
+      'windowResized',
+      'touchStarted',
+      'touchMoved',
+      'touchEnded',
+      'deviceMoved',
+      'deviceTurned',
+      'deviceShaken',
+      'keyPressed',
+      'keyReleased',
+      'keyTyped',
+    ];
+
+    userFunctions.forEach((userFn) => {
+      p[userFn] = () => {
+        updateEvents();
+        if (c && c[userFn]) {
+          c[userFn]();
+        }
+      };
+    });
+
+    const preDraw = () => {
+
+    }
+
     const getFriendlyTime = () => p.floor(s.start + s.t);
     const getFriendlyDuration = () => p.floor(s.start + s.duration);
     const formatTimeAndDuration = () => `${getFriendlyTime()} / ${getFriendlyDuration()}`;
 
-    const updateTime = (t) => {
-      timeSlider.value(t);
-      time.html(formatTimeAndDuration());
-    };
-
-    const stop = () => {
-      setPlay(false);
+    const stop = (keepTime = false) => {
+      togglePlay(p, false);
       if (isRecording) {
         setRecording(false);
         // @ts-ignore
         recorderRef.current.stop();
       }
-      updateTime(0);
+      if (!keepTime) {
+        updateTime(0);
+      }
+    };
+
+    const loadFont = () => {
+      p.once(() => {
+        p.cache('__defaultFont', p.loadFont('resources/KaTeX_Main-Regular.ttf'));
+      });
+      return p.fromCache('__defaultFont');
     };
 
     p.preload = () => {
-      // p.once('katex-font', () => p.loadFont('./resources/KaTeX_Main-Regular.ttf'))
+      if (s.webgl) {
+        loadFont();
+      }
+
+      if (c && c.preload) {
+        p.once(c.preload);
+      }
     };
 
     p.setup = () => {
-      // p.textFont(p.fromOnce('katex-font'));
+      p.loop();
       // create canvas
-      const canvas = s.webgl
-        ? p.createCanvas(width, height, p.WEBGL)
-        : p.createCanvas(width, height);
+      let createCanvas = s.webgl
+        ? postActionFunctions['createCanvas'](cellWidth, cellHeight, p.WEBGL)
+        : postActionFunctions['createCanvas'](cellWidth, cellHeight);
+
       // streamRef.current = canvas.elt.captureStream(60)
       p.randomSeed(1337);
       p.frameRate(s.frameRate);
       p.textSize(15);
       p.noStroke();
 
-      // if (!shouldPlay && (timeSlider && timeSlider.value() === s.t)) {
-      //   p.noLoop();
-      // }
+      function createSlider(sliderWidth, min, max, current, step = 1) {
+        timeSlider = p.createDiv();
+        timeSlider.attribute("role", "slider")
+        timeSlider.attribute("aria-label", "Seek slider")
+        timeSlider.attribute("draggable", "true")
+        timeSlider.attribute("aria-valuemin", min)
+        timeSlider.attribute("aria-valuenow", current)
+        timeSlider.style('width', `${sliderWidth}px`);
+        timeSlider.style('margin-left', `${playButtonSize}px`);
+        timeSlider.addClass('progress-bar');
 
-      // create sliders
-      timeSlider = p.createSlider(0, s.duration, s.t, 0.01);
-      timeSlider.style('width', `${width - playButtonSize - 8}px`);
-      timeSlider.style('margin-left', `${playButtonSize}px`);
-      timeSlider.addClass('e-range');
+        progressHandle = p.createSlider(min, max, current, step);
+        progressHandle.addClass('progress-handle');
+        progressHandle.style('width', `${sliderWidth}px`);
+        progressHandle.parent(timeSlider);
+
+        const progress = p.createDiv();
+        progress.addClass('progress-fill');
+        progress.parent(timeSlider);
+        return [
+          timeSlider,
+          (t) => {
+            progress.style('width', `${sliderWidth * (t / max)}px`);
+            progressHandle.value(t);
+            timeSlider.attribute('aria-valuenow', t);
+            time.html(formatTimeAndDuration());
+          }
+        ];
+      }
+
+      [timeSlider, updateTime] = createSlider(cellWidth - playButtonSize - 8,0, s.duration, s.t, 0.01);
       timeSlider.parent(timeSliderRef.current);
 
-      time = p.createSpan(formatTimeAndDuration());
+      time = p.createSpan();
       time.addClass('seek-time');
       time.parent(timeSliderRef.current);
 
-      if (c && c.setup) {
+      updateTime(s.t);
 
+      if (c && c.setup) {
         try {
           c.setup();
         } catch (e) {
@@ -220,18 +405,11 @@ export default function SketchCell(
         }
       }
 
-      // countSlider = p.createSlider(0, 300, s.count, 0.01);
-      // countSlider.style('width', '200px');
-      // countSlider.addClass('e-range');
-      // countSlider.addClass('count-slider');
-      //
-      // const countSliderContainer = p.createDiv();
-      // countSliderContainer.addClass("count-slider-container")
-      // countSliderContainer.parent(document.querySelector(".sliders"));
-      //
-      // const text = p.createSpan("Length");
-      // text.parent(countSliderContainer);
-      // countSlider.parent(countSliderContainer);
+      // let height = canvas.height;
+      // let width = canvas.width;
+      if (s.webgl && typeof p.textFont() !== "object") {
+        p.textFont(loadFont());
+      }
     }
 
     p.draw = () => {
@@ -239,7 +417,7 @@ export default function SketchCell(
       if (shouldRecord && !isRecording) {
         updateTime(0);
         setRecording(true);
-        setPlay(true);
+        togglePlay(p,true);
         // @ts-ignore
         recorderRef.current.start(1000);
       } else if (!shouldRecord && isRecording) {
@@ -248,13 +426,14 @@ export default function SketchCell(
         setRecording(false);
       }
 
-      if (timeSlider.value() !== s.t) {
-        s.t = timeSlider.value();
+      if (progressHandle.value() !== s.t) {
+        s.t = progressHandle.value();
         updateTime(s.t);
       }
 
+      let shouldPlay = isPlaying(p);
       let nextT = shouldPlay ? (s.t + s.rate) % s.duration : s.t;
-      if (c && c.draw) {
+      if (c && c.draw && !p.noDraw) {
         try {
           c.draw(s.start + s.t, s.start + nextT);
         } catch (e) {
@@ -263,12 +442,14 @@ export default function SketchCell(
         }
       }
 
-      if (shouldPlay) {
+      if (shouldPlay && !p.noDraw) {
         s.t = nextT;
         updateTime(s.t);
         if (!loop && s.t + s.rate >= s.duration) {
           stop();
         }
+      } else if (shouldPlay && p.noDraw) {
+        stop();
       }
     }
   };
@@ -282,7 +463,7 @@ export default function SketchCell(
     p5Ref.current = new p5(Sketch, myRef.current);
   };
   // const sketchCallback = useCallback(Sketch, [Sketch]);
-  useEffect(rerender, [Sketch]);
+  useEffect(rerender, [Sketch, cellWidth, cellHeight]);
 
   return (
     <div ref={cellRef} className={"cell"}>
@@ -301,8 +482,9 @@ export default function SketchCell(
       <div className={"sketch"} ref={myRef}/>
       <div ref={timeSliderRef} className={"time-slider"}/>
       <button
-        className={`play-button${!shouldPlay ? '' : ' paused'}`}
-        onClick={() => {setPlay(!shouldPlay); }}
+        ref={playButtonRef}
+        className={`play-button${!autoPlay ? '' : ' paused'}`}
+        onClick={() => {togglePlay(p5Ref.current); }}
       />
       {/**
         <div className={"info"}>

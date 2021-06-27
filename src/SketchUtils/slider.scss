@@ -16,7 +16,7 @@ $lower-background: linear-gradient(to bottom, $lower-color, $lower-color) 100% 5
 @function webkit-slider-thumb-shadow($i: 1) {
   $val: #{$i}px 0 0 -#{($track-height - $track-height) / 2} #{$upper-color};
   @if $i == 1 {
-    @for $k from 2 through 1000 {
+    @for $k from 2 through 100 {
       $val: #{$val}, webkit-slider-thumb-shadow($k);
     }
   }
