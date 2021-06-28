@@ -25,6 +25,7 @@ export default function SketchCell(
     freshState = false,
   }
 ) {
+  window['p5'] = p5;
   window['height'] = cellHeight;
   window['width'] = cellWidth;
   const p5Ref = useRef<p5>(null);
@@ -215,7 +216,7 @@ export default function SketchCell(
       for (let m in p) {
         if (!m.startsWith('_')) {
           if (typeof p[m] === "function" && !postActionFunctions[m]) {
-            preExecute.push(`let ${m} = p.${m}.bind(p);`);
+            preExecute.push(`var ${m} = p.${m}.bind(p);`);
           } else if (typeof p[m] !== "function") {
             preExecute.push(`var ${m} = p.${m};`);
           }
@@ -328,12 +329,7 @@ export default function SketchCell(
       }
     };
 
-    const loadFont = () => {
-      p.once(() => {
-        p.cache('__defaultFont', p.loadFont('resources/KaTeX_Main-Regular.ttf'));
-      });
-      return p.fromCache('__defaultFont');
-    };
+    const loadFont = () => p.once(() => p.loadFont('resources/KaTeX_Main-Regular.ttf'));
 
     p.preload = () => {
       if (s.webgl) {
