@@ -20,7 +20,7 @@ function setup() {
   );
 
   // This is where things that don't need to happen each frame should be called.
-  for(let i = 0; i < width / 10; i++){
+  for (let i = 0; i < width / 10; i++) {
     particles.push(new Particle());
   }
 };

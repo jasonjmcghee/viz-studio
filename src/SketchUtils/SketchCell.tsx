@@ -25,7 +25,6 @@ export default function SketchCell(
     freshState = false,
   }
 ) {
-  window['p5'] = p5;
   window['height'] = cellHeight;
   window['width'] = cellWidth;
   const p5Ref = useRef<p5>(null);
@@ -182,14 +181,14 @@ export default function SketchCell(
       }.bind(p),
       'createCanvas': function (w, h, type = p2d) {
         // @ts-ignore
-        let p: p5 = this;
-        p.createCanvas(w, h, type);
+        let _p: p5 = this;
+        _p.createCanvas(w, h, type);
         s.webgl = p.isWebGL();
         const canvas = p._renderer.drawingContext.canvas;
         s.width = canvas.clientWidth;
         s.height = canvas.clientHeight;
-        p.width = canvas.clientWidth;
-        p.height = canvas.clientHeight;
+        _p.width = canvas.clientWidth;
+        _p.height = canvas.clientHeight;
         window['width'] = canvas.clientWidth;
         window['height'] = canvas.clientHeight;
       }.bind(p)
