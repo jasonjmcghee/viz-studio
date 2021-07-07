@@ -1,10 +1,10 @@
 export const newSketch = `// Untitled
 s.duration = 1000;
-p.setup = () => {
+function setup() {
 
 };
 
-p.draw = () => {
-  p.background(0);
+function draw (t, nextT) {
+  background(0);
 };
 `;

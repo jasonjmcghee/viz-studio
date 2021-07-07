@@ -331,9 +331,7 @@ export default function SketchCell(
     const loadFont = () => p.once(() => p.loadFont('resources/KaTeX_Main-Regular.ttf'));
 
     p.preload = () => {
-      if (s.webgl) {
-        loadFont();
-      }
+      loadFont();
 
       if (c && c.preload) {
         p.once(c.preload);
@@ -392,18 +390,16 @@ export default function SketchCell(
 
       updateTime(s.t);
 
+      if (typeof p.textFont() !== "object") {
+        p.textFont(loadFont());
+      }
+
       if (c && c.setup) {
         try {
           c.setup();
         } catch (e) {
           console.error("Failed to execute setup.", e)
         }
-      }
-
-      // let height = canvas.height;
-      // let width = canvas.width;
-      if (s.webgl && typeof p.textFont() !== "object") {
-        p.textFont(loadFont());
       }
     }
 

@@ -13,6 +13,7 @@ import {plotAndParticles} from "./examples/plotAndParticles";
 import {doublePendulum} from "./examples/doublePendulum";
 import {mandelbrot} from "./examples/mandelbrot";
 import {newSketch} from "./examples/newSketch";
+import {transitionText} from "./examples/transitionText";
 
 function to_b64( str ) {
   return window.btoa(unescape(encodeURIComponent( str )));
@@ -53,25 +54,21 @@ export default function EditorCell({
 
   const [sketchHeight, setSketchHeight] = useState(defaultHeight.current);
 
+  const lookup = {
+    "new": newSketch,
+    "pendulum": doublePendulum,
+    "mandelbrot": mandelbrot,
+    "text": transitionText,
+    "": plotAndParticles,
+  };
+
   function updateProg(prog) {
-    if (!prog.length) {
-      setCodeString(plotAndParticles);
-      return;
-    }
-    if (prog.toLowerCase() === "new") {
-      setCodeString(newSketch);
-      return;
-    }
-    if (prog.toLowerCase() === "pendulum") {
-      setCodeString(doublePendulum);
-      return;
-    }
-    if (prog.toLowerCase() === "mandelbrot") {
-      setCodeString(mandelbrot);
-      return;
+    let code = lookup[prog.toLowerCase()];
+    if (code) {
+      return setCodeString(code);
     }
     try {
-      const code = from_b64(prog);
+      code = from_b64(prog);
       setCodeString(code);
     } catch (e) {
       console.error("Unable to parse program, falling back to template.");
