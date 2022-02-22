@@ -39,6 +39,7 @@ export default function EditorCell({
 }) {
   const [freshState, setFreshState] = useState(false);
   const [resizeFraction, setResizeFraction] = useState(4/7);
+  const [showEditor, setShowEditor] = useState(height > 400);
 
   const isVerticalSplit = width > 1000;
   const [codeString, setCodeString] = useState(``);
@@ -46,8 +47,9 @@ export default function EditorCell({
   const location = useLocation();
   const history = useHistory();
   const dimSize = isVerticalSplit ? width : height;
+  const ratio = showEditor ? resizeFraction : 1;
 
-  const defaultSize = useRef(Math.floor(resizeFraction * dimSize));
+  const defaultSize = useRef(Math.floor(ratio * dimSize));
   // useEffect(() => {
   //   defaultHeight.current = parseInt(
   //     localStorage.getItem('splitPos') ?? defaultHeight.current.toString(), 10
@@ -117,8 +119,8 @@ export default function EditorCell({
     setSketchSize(resizeFraction * dimSize);
   }, [dimSize, resizeFraction]);
 
-  const sketchHeight = isVerticalSplit ? height : resizeFraction * height;
-  const sketchWidth = isVerticalSplit ? resizeFraction * width : width;
+  const sketchHeight = isVerticalSplit ? height : ratio * height;
+  const sketchWidth = isVerticalSplit ? ratio * width : width;
   const editorHeight = isVerticalSplit ? height : height - sketchHeight;
   const editorWidth = isVerticalSplit ? width - sketchWidth : width;
 
@@ -129,6 +131,7 @@ export default function EditorCell({
         size={(isVerticalSplit ? sketchWidth : sketchHeight)}
         onChange={debounce(updateSize, 300)}
         allowResize={true}
+        onResizerDoubleClick={() => setShowEditor(!showEditor)}
       >
         <SketchCell
         width={sketchWidth}
@@ -139,7 +142,7 @@ export default function EditorCell({
         freshState
       />
       {// @ts-ignore
-      }<AceEditor
+      }{showEditor && <AceEditor
         style={{width: `${editorWidth}px`}}
         height={`${editorHeight}px`}
         mode="jsx"
@@ -157,7 +160,7 @@ export default function EditorCell({
           tabSize: 2,
           printMargin: false,
         }}
-      />
+      />}
       </SplitPane>}
     </div>
   );
